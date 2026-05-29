@@ -1168,6 +1168,7 @@ def init_agent(
     # those callers explicitly set this flag to False.
     agent._end_session_on_close = True
     agent._session_db_failed = False
+    agent._session_db_create_fail_count = 0
     agent._session_init_model_config = {
         "max_iterations": agent.max_iterations,
         "reasoning_config": reasoning_config,
