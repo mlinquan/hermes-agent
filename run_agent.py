@@ -1686,6 +1686,7 @@ class AIAgent:
             }
 
             last_successful_idx = self._last_flushed_db_idx
+            flush_ok = True
             for idx, msg in enumerate(messages):
                 if not isinstance(msg, dict):
                     continue
@@ -1741,8 +1742,11 @@ class AIAgent:
                     last_successful_idx = idx + 1
                 except Exception:
                     self._session_db_failed = True
+                    flush_ok = False
                     break
             self._last_flushed_db_idx = last_successful_idx
+            if flush_ok:
+                self._session_db_failed = False
         except Exception as e:
             self._session_db_failed = True
             logger.error("Session DB flush failed: %s", e)
