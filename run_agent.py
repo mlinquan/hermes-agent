@@ -1572,9 +1572,17 @@ class AIAgent:
                 fb_dir.mkdir(parents=True, exist_ok=True)
                 fb_path = fb_dir / f"{sid}.pending.jsonl"
                 unflushed = messages[self._last_flushed_db_idx:]
+                now_ts = time.time()
                 with open(fb_path, "a") as f:
                     for msg in unflushed:
-                        f.write(json.dumps(msg, ensure_ascii=False) + "\n")
+                        # Save message with timestamp for later recovery
+                        # Use msg.get("timestamp") if available, otherwise current time
+                        msg_ts = msg.get("timestamp", now_ts)
+                        wrapped = {
+                            "_fallback_timestamp": msg_ts,
+                            "message": msg,
+                        }
+                        f.write(json.dumps(wrapped, ensure_ascii=False) + "\n")
             except Exception:
                 pass  # Last-resort fallback — if even this fails, nothing more we can do
 
@@ -1677,7 +1685,8 @@ class AIAgent:
                 if isinstance(item, dict)
             }
 
-            for msg in messages:
+            last_successful_idx = self._last_flushed_db_idx
+            for idx, msg in enumerate(messages):
                 if not isinstance(msg, dict):
                     continue
                 msg_id = id(msg)
@@ -1685,6 +1694,7 @@ class AIAgent:
                     continue
                 if msg_id in history_ids:
                     flushed_ids.add(msg_id)
+                    last_successful_idx = idx + 1
                     continue
                 role = msg.get("role", "unknown")
                 content = msg.get("content")
@@ -1723,10 +1733,11 @@ class AIAgent:
                         timestamp=msg.get("timestamp"),
                     )
                     flushed_ids.add(msg_id)
+                    last_successful_idx = idx + 1
                 except Exception:
                     self._session_db_failed = True
                     break
-            self._last_flushed_db_idx = len(messages)
+            self._last_flushed_db_idx = last_successful_idx
         except Exception as e:
             self._session_db_failed = True
             logger.error("Session DB flush failed: %s", e)
