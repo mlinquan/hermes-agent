@@ -1559,7 +1559,10 @@ class AIAgent:
         # When SessionDB is entirely absent (e.g. SQLite init failed),
         # _flush_messages_to_session_db returns early. Write ALL messages
         # to the pending file so they can be recovered on next startup.
-        if not self._session_db and messages:
+        # Ephemeral sub-agents (background review forks) intentionally
+        # have no _session_db and must not pollute the parent session's
+        # pending file with their transient conversation.
+        if not self._session_db and messages and not getattr(self, '_skip_session_persistence', False):
             self._write_pending_fallback(messages, 0)
 
     def _drop_trailing_empty_response_scaffolding(self, messages: List[Dict]) -> None:

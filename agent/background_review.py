@@ -652,8 +652,12 @@ def _run_review_in_thread(
                 enabled_toolsets=getattr(agent, "enabled_toolsets", None),
                 disabled_toolsets=getattr(agent, "disabled_toolsets", None),
                 skip_memory=True,
-                session_db=getattr(agent, "_session_db", None),
             )
+            # The review fork is ephemeral — its conversation is not part
+            # of the parent session's durable transcript.  Skip persistence
+            # so the fork's messages never land in the parent's pending
+            # fallback file (the fork intentionally has no _session_db).
+            review_agent._skip_session_persistence = True
             review_agent._memory_write_origin = "background_review"
             review_agent._memory_write_context = "background_review"
             # The review fork pins the parent's cached system prompt and keeps
