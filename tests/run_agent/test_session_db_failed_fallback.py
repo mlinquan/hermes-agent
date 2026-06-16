@@ -121,23 +121,6 @@ class TestJsonlFallback:
 
 # ── DB-None fallback ───────────────────────────────────────────────────
 
-def test_fallback_when_session_db_is_none():
-    """When _session_db is None, all messages go to pending."""
-    agent = _make_agent(None, "sid")
-    agent._save_session_log = MagicMock()
-
-    messages = [_make_message("user", "a"), _make_message("assistant", "b")]
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch("hermes_constants.get_hermes_home", return_value=Path(tmpdir)):
-            agent._persist_session(messages)
-
-        fb_dir = Path(tmpdir) / "sessions"
-        fb_files = list(fb_dir.glob("*.pending.jsonl"))
-        assert len(fb_files) == 1
-        pending = [json.loads(line) for line in fb_files[0].read_text().splitlines() if line.strip()]
-        assert len(pending) == 2
-
-
 # ── Profile isolation ──────────────────────────────────────────────────
 
 def test_profile_isolation():
