@@ -3725,7 +3725,7 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
         self._last_turn_finished_at: Optional[float] = None  # time.time() when the last agent loop finished
         # Initialize SQLite session store early so /title works before first message
         self._session_db = None
-        self._session_db_unavailable = False
+        self._session_db_init_failed = False
         try:
             from hermes_state import SessionDB
             self._session_db = SessionDB()
@@ -3735,7 +3735,7 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
             # later shows a truncated/empty session. A buried log line is not
             # enough; surface it prominently so the user knows persistence is
             # off for this run and can fix the store before relying on resume.
-            self._session_db_unavailable = True
+            self._session_db_init_failed = True
             logger.warning("Failed to initialize SessionDB — session will NOT be indexed for search: %s", e)
             try:
                 # Console is imported at module scope; do NOT re-import it here.

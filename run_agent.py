@@ -539,6 +539,7 @@ class AIAgent:
                 cwd=_launch_cwd_for_session(source),
             )
             self._session_db_created = True
+            self._session_db_init_failed = False
             if self._session_db_create_fail_count:
                 failed_count = self._session_db_create_fail_count
                 self._session_db_create_fail_count = 0
@@ -1555,6 +1556,12 @@ class AIAgent:
         self._session_messages = messages
         self._save_session_log(messages)
         self._flush_messages_to_session_db(messages, conversation_history)
+
+        # When SessionDB init failed permanently (not just a transient startup
+        # race or an ephemeral sub-agent), write messages to the pending
+        # fallback so they survive a restart.
+        if not self._session_db and messages and getattr(self, '_session_db_init_failed', False):
+            self._write_pending_fallback(messages, 0)
 
     def _drop_trailing_empty_response_scaffolding(self, messages: List[Dict]) -> None:
         """Remove private empty-response retry/failure scaffolding from transcript tails.

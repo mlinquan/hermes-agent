@@ -391,6 +391,12 @@ class CLIAgentSetupMixin:
                 notice_callback=self._on_notice,
                 notice_clear_callback=self._on_notice_clear,
             )
+            # If the CLI's own SessionDB init failed, propagate the flag so
+            # _persist_session can distinguish genuine init failures from
+            # transient/expected None (review forks, startup races).
+            self.agent._session_db_init_failed = getattr(
+                self, '_session_db_init_failed', False,
+            )
             # Store reference for atexit memory provider shutdown.
             # NOTE: this MUST write to the ``cli`` module's global, not a
             # local module global. ``_run_cleanup`` (in cli.py) reads

@@ -1606,6 +1606,9 @@ class CLICommandsMixin:
                     openrouter_min_coding_score=self._openrouter_min_coding_score,
                     fallback_model=self._fallback_model,
                 )
+                bg_agent._session_db_init_failed = getattr(
+                    self, '_session_db_init_failed', False,
+                )
                 # Silence raw spinner; route thinking through TUI widget when no foreground agent is active.
                 bg_agent._print_fn = lambda *_a, **_kw: None
 
