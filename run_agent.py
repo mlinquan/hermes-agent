@@ -1747,7 +1747,7 @@ class AIAgent:
                         reasoning_details=msg.get("reasoning_details") if role == "assistant" else None,
                         codex_reasoning_items=msg.get("codex_reasoning_items") if role == "assistant" else None,
                         codex_message_items=msg.get("codex_message_items") if role == "assistant" else None,
-                        timestamp=flush_ts,
+                        timestamp=msg.get("timestamp") or flush_ts,
                     )
                     flushed_ids.add(msg_id)
                     last_successful_idx = idx + 1
